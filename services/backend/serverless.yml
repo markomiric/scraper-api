@@ -29,7 +29,10 @@ functions:
 
 custom:
   pythonRequirements:
-    dockerizePip: non-linux
+  # This will not work with uv until this PR is merged
+  # https://github.com/serverless/serverless-python-requirements/pull/850
+  # When it does, migrate back to uv
+    useUv: true
     noDeploy:
       - boto3
       - botocore
