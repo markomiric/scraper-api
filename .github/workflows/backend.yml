@@ -5,6 +5,12 @@ on:
       - 'services/backend/**'
       - '.github/workflows/backend.yml'
 
+env:
+  APP_ENVIRONMENT: development
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: eu-central-1
+
 jobs:
   test:
     strategy:
@@ -72,3 +78,38 @@ jobs:
     
       - name: Run ruff format
         run: uv run ruff format --diff
+  deploy-development:
+    needs: [ test, code-quality ]
+    strategy:
+        fail-fast: false
+        matrix:
+          python-version: [3.13]
+          uv-version: [0.5.7]
+          node-version: [18]
+          os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: services/backend
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Install uv
+          uses: astral-sh/setup-uv@v4
+          with:
+              version: ${{ matrix.uv-version }}
+  
+        - name: Install python
+          uses: actions/setup-python@v5
+          with:
+              python-version: ${{ matrix.python-version }}
+
+        - uses: actions/setup-node@v4
+          with:
+            node-version: ${{ matrix.node-version }}
+        - name: Install serverless framework
+          run: npm install -g serverless
+        - name: Install npm dependencies
+          run: npm install
+        - name: Deploy
+          run: sls deploy --stage development --verbose
