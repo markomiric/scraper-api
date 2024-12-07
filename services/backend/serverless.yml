@@ -29,7 +29,7 @@ functions:
 
 custom:
   pythonRequirements:
-    dockerizePip: non-linux
+    usePoetry: true
     noDeploy:
       - boto3
       - botocore
