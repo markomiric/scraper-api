@@ -1,0 +1,74 @@
+name: Test and deploy backend
+on:
+  push:
+    paths:
+      - 'services/backend/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.13]
+        uv-version: [0.5.7]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: services/backend
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Install uv
+          uses: astral-sh/setup-uv@v4
+          with:
+              version: ${{ matrix.uv-version }}
+  
+        - name: Install python
+          uses: actions/setup-python@v5
+          with:
+              python-version: ${{ matrix.python-version }}
+  
+        - name: Install the project
+          run: uv sync --all-extras --dev
+
+        - name: Run tests
+          run: uv run pytest tests/ --cov=./ --cov-report=xml
+
+        - name: Upload coverage to Codecov
+          uses: codecov/codecov-action@v4
+          with:
+            token: ${{ secrets.CODECOV_TOKEN }}
+  code-quality:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.13]
+        uv-version: [0.5.7]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: services/backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+            version: ${{ matrix.uv-version }}
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+            python-version: ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Run ruff check
+        run: uv run ruff check --output-format=github .
+    
+      - name: Run ruff format
+        run: uv run ruff format --diff
