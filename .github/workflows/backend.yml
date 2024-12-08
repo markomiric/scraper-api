@@ -7,6 +7,7 @@ on:
 
 env:
   APP_ENVIRONMENT: development
+  SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: eu-central-1
@@ -110,6 +111,6 @@ jobs:
       - name: Install serverless framework
         run: npm install -g serverless
       - name: Install npm dependencies
-        run: npm install
+        run: npm ci
       - name: Deploy
         run: sls deploy --stage development --verbose
