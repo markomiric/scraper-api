@@ -39,6 +39,13 @@ functions:
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60
+          authorizer:
+            name: JobsAPIAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
   # cron:
   #   handler: src.scraper.run
   #   events:
@@ -58,4 +65,5 @@ plugins:
   - serverless-python-requirements
 
 resources:
+  - ${file(resources/cognito.yml)} 
   - ${file(resources/dynamodb.yml)}
