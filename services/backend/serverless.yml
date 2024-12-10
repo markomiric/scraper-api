@@ -3,7 +3,6 @@ service: backend
 frameworkVersion: '4'
 useDotenv: true
 
-
 provider:
   name: aws
   runtime: python3.13
@@ -15,7 +14,7 @@ provider:
 
 functions:
   API:
-    handler: main.handle
+    handler: src.main.handle
     timeout: 10
     memorySize: 512
     events:
@@ -25,6 +24,10 @@ functions:
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60
+  # cron:
+  #   handler: src.scraper.run
+  #   events:
+  #       - schedule: cron(10 03 * * ? *) #run at 03:10 (UTC) every day.
 
 
 custom:
