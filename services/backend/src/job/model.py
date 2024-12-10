@@ -25,12 +25,24 @@ class Job:
     updated_at: str
 
     @classmethod
-    def create(cls, id_, title, company, location, job_url, description, logo_url, author) -> "Job":
+    def create(
+        cls, id_, title, company, location, job_url, description, logo_url, author
+    ) -> "Job":
         status = JobStatus.DRAFT
         created_at = datetime.datetime.now(datetime.UTC).isoformat()
         updated_at = datetime.datetime.now(datetime.UTC).isoformat()
         return cls(
-            id_, title, company, location, job_url, description, logo_url, status, author, created_at, updated_at
+            id_,
+            title,
+            company,
+            location,
+            job_url,
+            description,
+            logo_url,
+            status,
+            author,
+            created_at,
+            updated_at,
         )
 
     def activate(self) -> None:
