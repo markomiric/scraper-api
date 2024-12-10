@@ -8,11 +8,12 @@ from src.job.model import Job, JobStatus
 
 
 class JobStore:
-    def __init__(self, table_name):
+    def __init__(self, table_name, dynamodb_url=None):
         self.table_name = table_name
+        self.dynamodb_url = dynamodb_url
 
     def add(self, job: Job) -> None:
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         table.put_item(
             Item={
@@ -35,7 +36,7 @@ class JobStore:
         )
 
     def get(self, job_id: str, author: str) -> Job:
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         record = table.get_item(Key={"PK": f"#{author}", "SK": f"#{job_id}"})
         return Job(
@@ -59,7 +60,7 @@ class JobStore:
         return self._get_by_status(author, JobStatus.CLOSED)
 
     def _get_by_status(self, author, status):
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         last_key = None
         query_kwargs = {

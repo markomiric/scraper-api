@@ -11,6 +11,21 @@ provider:
   logRetentionInDays: 30
   environment:
     APP_ENVIRONMENT: ${self:provider.stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "Fn::GetAtt": [ JobsAPITable, Arn ]
+            - "Fn::Join": ['/', ["Fn::GetAtt": [ JobsAPITable, Arn ], 'index', '*']]
 
 functions:
   API:
@@ -36,6 +51,11 @@ custom:
     noDeploy:
       - boto3
       - botocore
+  stage: ${opt:stage, self:provider.stage}
+  tableName: ${self:custom.stage}-jobs
 
 plugins:
   - serverless-python-requirements
+
+resources:
+  - ${file(resources/dynamodb.yml)}
