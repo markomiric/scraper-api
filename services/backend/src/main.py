@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 
+from src.job.routes import router as job_router
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -10,6 +12,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def create_application() -> FastAPI:
+    application = FastAPI()
+    application.include_router(job_router, prefix="/api", tags=["jobs"])
+
+    return application
+
+
+app = create_application()
 
 
 @app.get("/api/health")

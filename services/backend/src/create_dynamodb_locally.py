@@ -1,44 +1,24 @@
 import os
+from typing import Dict
 
 import boto3
-import jwt
-import pytest
-from fastapi.testclient import TestClient
-from moto import mock_aws
-
-from src.job.store import JobStore, get_job_store
-from src.main import app
+from botocore.exceptions import ClientError
 
 
-@pytest.fixture
-def client(job_store):
-    app.dependency_overrides[get_job_store] = lambda: job_store
-    return TestClient(app)
+def create_table(
+    table_name: str, endpoint_url: str, region: str = "eu-central-1"
+) -> Dict:
+    """Create DynamoDB table for jobs."""
+    try:
+        client = boto3.client(
+            "dynamodb",
+            endpoint_url=endpoint_url,
+            region_name=region,
+            aws_access_key_id="dummy",
+            aws_secret_access_key="dummy",
+        )
 
-
-@pytest.fixture
-def job_store(dynamodb_table):
-    return JobStore(dynamodb_table)
-
-
-@pytest.fixture
-def user_email():
-    return "user@email.com"
-
-
-@pytest.fixture
-def id_token(user_email):
-    return jwt.encode({"cognito:username": user_email}, "secret")
-
-
-@pytest.fixture
-def dynamodb_table():
-    os.environ["AWS_DEFAULT_REGION"] = "eu-central-1"
-
-    with mock_aws():
-        client = boto3.client("dynamodb")
-        table_name = "test-table"
-        client.create_table(
+        response = client.create_table(
             AttributeDefinitions=[
                 {"AttributeName": "PK", "AttributeType": "S"},
                 {"AttributeName": "SK", "AttributeType": "S"},
@@ -64,4 +44,15 @@ def dynamodb_table():
                 },
             ],
         )
-        yield table_name
+        print(f"Table {table_name} created successfully")
+        return response
+    except ClientError as e:
+        print(f"Error creating table: {e}")
+        raise
+
+
+if __name__ == "__main__":
+    table_name = os.getenv("TABLE_NAME", "local-jobs-table")
+    dynamodb_url = os.getenv("DYNAMODB_URL", "http://localhost:8000")
+
+    create_table(table_name=table_name, endpoint_url=dynamodb_url)

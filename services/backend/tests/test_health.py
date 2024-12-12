@@ -1,13 +1,4 @@
-import pytest
 from fastapi import status
-from starlette.testclient import TestClient
-
-from src.main import app
-
-
-@pytest.fixture
-def client():
-    return TestClient(app)
 
 
 def test_health(client):

@@ -1,5 +1,7 @@
 import uuid
 
+from starlette import status
+
 from src.job.model import Job
 from src.job.store import JobStore
 
@@ -51,3 +53,35 @@ def test_active_jobs_retrieved_by_status(dynamodb_table):
     repository.add(closed_job)
 
     assert repository.get_active(author=active_job.author) == [active_job]
+
+
+def test_create_job(client, user_email, id_token):
+    job_data = {
+        "title": "Python Developer",
+        "company": "Tech Corp",
+        "location": "Berlin, Germany",
+        "job_url": "https://example.com/job/123",
+        "author": user_email,
+        "description": "We are looking for a Python developer",
+        "logo_url": "https://example.com/logo.png",
+    }
+
+    # Make request
+    response = client.post(
+        "/api/jobs", json=job_data, headers={"Authorization": id_token}
+    )
+    body = response.json()
+
+    # Assertions
+    assert response.status_code == status.HTTP_201_CREATED
+    assert uuid.UUID(body["id"])
+    assert body["title"] == job_data["title"]
+    assert body["company"] == job_data["company"]
+    assert body["location"] == job_data["location"]
+    assert body["job_url"] == job_data["job_url"]
+    assert body["description"] == job_data["description"]
+    assert body["logo_url"] == job_data["logo_url"]
+    assert body["status"] == "DRAFT"
+    assert body["author"] == user_email
+    assert "created_at" in body
+    assert "updated_at" in body
