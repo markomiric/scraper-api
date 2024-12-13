@@ -27,6 +27,11 @@ provider:
           Resource:
             - "Fn::GetAtt": [ JobsAPITable, Arn ]
             - "Fn::Join": ['/', ["Fn::GetAtt": [ JobsAPITable, Arn ], 'index', '*']]
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+          Resource:
+            - !GetAtt CognitoUserPool.Arn
 
 functions:
   API:
