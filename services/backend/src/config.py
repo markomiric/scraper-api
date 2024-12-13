@@ -10,9 +10,9 @@ log = logging.getLogger("uvicorn")
 class Settings(BaseSettings):
     DYNAMODB_URL: Optional[str] = None
     TABLE_NAME: str = ""
-    AWS_DEFAULT_REGION: str
-    AWS_USER_POOL_ID: str
-    AWS_USER_POOL_CLIENT_ID: str
+    AWS_DEFAULT_REGION: str = ""
+    AWS_USER_POOL_ID: str = ""
+    AWS_USER_POOL_CLIENT_ID: str = ""
 
     model_config = SettingsConfigDict(
         env_file=(".env", ".env.development"),
