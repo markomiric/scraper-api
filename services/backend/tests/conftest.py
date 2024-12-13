@@ -33,7 +33,7 @@ def id_token(user_email):
 
 @pytest.fixture
 def dynamodb_table():
-    os.environ["AWS_DEFAULT_REGION"] = "eu-central-1"
+    os.environ["AWS_REGION"] = "eu-central-1"
 
     with mock_aws():
         client = boto3.client("dynamodb")

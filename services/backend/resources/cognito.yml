@@ -27,6 +27,22 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
       GenerateSecret: false
 
+  CognitoUserPoolGroupAdmin:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: "Admin"
+      UserPoolId:
+        Ref: CognitoUserPool
+      Description: "Administrators with full access"
+
+  CognitoUserPoolGroupUser:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: "User"
+      UserPoolId:
+        Ref: CognitoUserPool
+      Description: "Regular users with limited access"
+
 Outputs:
   UserPoolId:
     Value:

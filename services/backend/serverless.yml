@@ -12,6 +12,10 @@ provider:
   environment:
     APP_ENVIRONMENT: ${self:provider.stage}
     TABLE_NAME: ${self:custom.tableName}
+    AWS_USER_POOL_ID:
+      Ref: CognitoUserPool
+    AWS_USER_POOL_CLIENT_ID:
+      Ref: CognitoUserPoolClient
   iam:
     role:
       statements:
@@ -32,6 +36,13 @@ provider:
             - cognito-idp:AdminGetUser
           Resource:
             - !GetAtt CognitoUserPool.Arn
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminAddUserToGroup
+          Resource:
+            - !Sub
+                - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}
+                - UserPoolId: !Ref CognitoUserPool
 
 functions:
   API:
@@ -39,6 +50,12 @@ functions:
     timeout: 10
     memorySize: 512
     events:
+      - http:
+          path: /docs
+          method: any
+          cors:
+            origin: ${env:ALLOWED_ORIGINS}
+            maxAge: 60
       - http:
           path: /{proxy+}
           method: any
@@ -52,6 +69,7 @@ functions:
               Fn::GetAtt:
                 - CognitoUserPool
                 - Arn
+            scopes: []
   # cron:
   #   handler: src.scraper.run
   #   events:
