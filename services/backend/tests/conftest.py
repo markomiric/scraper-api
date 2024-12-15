@@ -1,12 +1,14 @@
 import os
+import time
 
 import boto3
-import jwt
 import pytest
 from fastapi.testclient import TestClient
+from jose import jwt
 from moto import mock_aws
 
-from src.job.store import JobStore, get_job_store
+from src.dependencies import get_job_store
+from src.job.store import JobStore
 from src.main import app
 
 
@@ -27,8 +29,31 @@ def user_email():
 
 
 @pytest.fixture
-def id_token(user_email):
-    return jwt.encode({"cognito:username": user_email}, "secret")
+def token(user_email):
+    token = jwt.encode(
+        {
+            "sub": "1234567890",
+            "email": user_email,
+            "cognito:username": user_email,
+            "cognito:groups": ["User"],
+            "token_use": "id",
+            "auth_time": int(time.time()),
+            "exp": int(time.time()) + 3600,
+            "iat": int(time.time()),
+            "iss": "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_MockPoolId",
+            "aud": "MockClientId",
+        },
+        "test-secret",
+        algorithm="HS256",
+    )
+    return token
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_testing_env():
+    os.environ["TESTING"] = "1"
+    yield
+    os.environ.pop("TESTING", None)
 
 
 @pytest.fixture

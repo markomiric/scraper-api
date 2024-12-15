@@ -4,7 +4,6 @@ from uuid import UUID
 import boto3
 from boto3.dynamodb.conditions import Key
 
-from src.config import get_settings
 from src.job.model import Job, JobStatus
 
 
@@ -96,8 +95,3 @@ class JobStore:
                 break
 
         return jobs
-
-
-def get_job_store() -> JobStore:
-    config = get_settings()
-    return JobStore(config.TABLE_NAME, dynamodb_url=config.DYNAMODB_URL)

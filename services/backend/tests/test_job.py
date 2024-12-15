@@ -55,7 +55,7 @@ def test_active_jobs_retrieved_by_status(dynamodb_table):
     assert repository.get_active(author=active_job.author) == [active_job]
 
 
-def test_create_job(client, user_email, id_token):
+def test_create_job(client, user_email, token):
     job_data = {
         "title": "Python Developer",
         "company": "Tech Corp",
@@ -66,9 +66,11 @@ def test_create_job(client, user_email, id_token):
         "logo_url": "https://example.com/logo.png",
     }
 
-    # Make request
+    # Make request with 'Bearer' prefix
     response = client.post(
-        "/api/jobs", json=job_data, headers={"Authorization": id_token}
+        "/api/jobs",
+        json=job_data,
+        headers={"Authorization": f"Bearer {token}"},
     )
     body = response.json()
 
