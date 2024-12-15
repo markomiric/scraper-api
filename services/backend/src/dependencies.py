@@ -1,6 +1,7 @@
 import os
+from typing import Any, Dict
 
-import requests
+import httpx
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwk, jwt
@@ -12,12 +13,25 @@ from src.job.store import JobStore
 settings = get_settings()
 bearer_scheme = HTTPBearer()
 
-# Cache the JWKS for token verification
-jwks_url = f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.AWS_USER_POOL_ID}/.well-known/jwks.json"
-jwks = requests.get(jwks_url).json()
+_httpx_client: httpx.AsyncClient = None
+_jwks_cache: Dict[str, Any] = None
 
 
-def get_current_user(
+async def get_jwks():
+    global _httpx_client, _jwks_cache
+
+    if _jwks_cache is None:
+        if _httpx_client is None:
+            _httpx_client = httpx.AsyncClient()
+
+        jwks_url = f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.AWS_USER_POOL_ID}/.well-known/jwks.json"
+        response = await _httpx_client.get(jwks_url)
+        _jwks_cache = response.json()
+
+    return _jwks_cache
+
+
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),
 ):
     token = credentials.credentials
@@ -36,7 +50,8 @@ def get_current_user(
             headers = jwt.get_unverified_headers(token)
             kid = headers["kid"]
 
-            # Find the public key in JWKS
+            # Get JWKS and find the public key
+            jwks = await get_jwks()
             key = next((key for key in jwks["keys"] if key["kid"] == kid), None)
             if not key:
                 raise HTTPException(status_code=401, detail="Public key not found")
