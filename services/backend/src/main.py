@@ -13,10 +13,10 @@ root_path = f"/{stage}" if stage else ""
 
 
 def create_application() -> FastAPI:
-    application = FastAPI(root_path=root_path)
-    application.include_router(auth_router, prefix="/api")
-    application.include_router(job_router, prefix="/api")
-    application.include_router(health_router, prefix="/api")
+    application = FastAPI(title="KamaCareer", root_path=root_path)
+    application.include_router(auth_router, prefix="/api/v1")
+    application.include_router(job_router, prefix="/api/v1")
+    application.include_router(health_router, prefix="/api/v1")
     application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
