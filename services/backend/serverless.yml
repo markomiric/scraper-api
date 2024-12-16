@@ -51,18 +51,29 @@ functions:
     timeout: 10
     memorySize: 512
     events:
+      # Public routes (no authorizer)
+      - http:
+          path: /auth/{proxy+}
+          method: any
+          cors:
+            origin: ${env:ALLOWED_ORIGINS}
+            maxAge: 60
+
       - http:
           path: /docs
           method: any
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60
+
       - http:
           path: /openapi.json
-          method: get
+          method: any
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60
+
+      # Secured routes (with authorizer)
       - http:
           path: /{proxy+}
           method: any
