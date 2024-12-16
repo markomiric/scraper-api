@@ -8,10 +8,10 @@ from src.job.model import Job
 from src.job.schema import CreateJobRequest, JobResponse
 from src.job.store import JobStore
 
-router = APIRouter()
+router = APIRouter(prefix="/jobs", tags=["Job"])
 
 
-@router.post("/jobs", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 def create_job(
     job_request: CreateJobRequest,
     job_store: JobStore = Depends(get_job_store),

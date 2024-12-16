@@ -24,7 +24,7 @@ from src.user.schema import (
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])  # Changed tags to a list
 
 
 def handle_cognito_error(e: ClientError) -> None:
