@@ -16,6 +16,7 @@ provider:
       Ref: CognitoUserPool
     AWS_USER_POOL_CLIENT_ID:
       Ref: CognitoUserPoolClient
+    STAGE: ${self:provider.stage}
   iam:
     role:
       statements:
@@ -51,7 +52,7 @@ functions:
     memorySize: 512
     events:
       - http:
-          path: /docs
+          path: /
           method: any
           cors:
             origin: ${env:ALLOWED_ORIGINS}

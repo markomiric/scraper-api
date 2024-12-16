@@ -2,11 +2,11 @@ import boto3
 from pydantic import EmailStr
 
 from src.user.schema import (
-    ChangePassword,
-    ConfirmForgotPassword,
-    UserSignIn,
-    UserSignUp,
-    UserVerify,
+    ChangePasswordRequest,
+    ConfirmForgotPasswordRequest,
+    ConfirmUserRequest,
+    UserSignInRequest,
+    UserSignUpRequest,
 )
 
 
@@ -16,14 +16,14 @@ class Cognito:
         self.user_pool_id = user_pool_id
         self.user_pool_client_id = user_pool_client_id
 
-    def sign_up(self, user: UserSignUp):
+    def sign_up(self, user: UserSignUpRequest):
         return self.client.sign_up(
             ClientId=self.user_pool_client_id,
             Username=user.email,
             Password=user.password,
         )
 
-    def confirm_sign_up(self, data: UserVerify):
+    def confirm_sign_up(self, data: ConfirmUserRequest):
         return self.client.confirm_sign_up(
             ClientId=self.user_pool_client_id,
             Username=data.email,
@@ -38,7 +38,7 @@ class Cognito:
     def admin_get_user(self, email: EmailStr):
         return self.client.admin_get_user(UserPoolId=self.user_pool_id, Username=email)
 
-    def authenticate_user(self, data: UserSignIn):
+    def authenticate_user(self, data: UserSignInRequest):
         return self.client.initiate_auth(
             ClientId=self.user_pool_client_id,
             AuthFlow="USER_PASSWORD_AUTH",
@@ -50,7 +50,7 @@ class Cognito:
             ClientId=self.user_pool_client_id, Username=email
         )
 
-    def confirm_forgot_password(self, data: ConfirmForgotPassword):
+    def confirm_forgot_password(self, data: ConfirmForgotPasswordRequest):
         return self.client.confirm_forgot_password(
             ClientId=self.user_pool_client_id,
             Username=data.email,
@@ -58,7 +58,7 @@ class Cognito:
             Password=data.new_password,
         )
 
-    def change_password(self, data: ChangePassword):
+    def change_password(self, data: ChangePasswordRequest):
         return self.client.change_password(
             PreviousPassword=data.old_password,
             ProposedPassword=data.new_password,
