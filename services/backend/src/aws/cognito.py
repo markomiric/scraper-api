@@ -72,7 +72,7 @@ class Cognito:
             AuthParameters={"REFRESH_TOKEN": refresh_token},
         )
 
-    def logout(self, access_token: str):
+    def sign_out(self, access_token: str):
         return self.client.global_sign_out(AccessToken=access_token)
 
     def admin_add_user_to_group(self, username: str, group_name: str):

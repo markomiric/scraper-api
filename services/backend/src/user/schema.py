@@ -1,127 +1,75 @@
 from typing import Annotated
 
 from annotated_types import MaxLen, MinLen
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr, Field
+
+from src.common.schema import BaseSchema
 
 
-class UserSignUpRequest(BaseModel):
-    email: EmailStr
-    password: Annotated[str, MinLen(8)]
-
-    class Config:
-        schema_extra = {
-            "example": {"email": "user@email.com", "password": "TestPassword123!"}
-        }
+class UserSignUpRequest(BaseSchema):
+    email: EmailStr = Field(..., description="User's email address")
+    password: Annotated[str, MinLen(8)] = Field(..., description="User's password")
 
 
-class ConfirmUserRequest(BaseModel):
-    email: EmailStr
-    confirmation_code: Annotated[str, MaxLen(6)]
-
-    class Config:
-        schema_extra = {
-            "example": {"email": "user@email.com", "confirmation_code": "123456"}
-        }
+class ConfirmUserRequest(BaseSchema):
+    email: EmailStr = Field(..., description="User's email address")
+    confirmation_code: Annotated[str, MaxLen(6)] = Field(
+        ..., description="6-digit confirmation code"
+    )
 
 
-class UserSignInRequest(BaseModel):
-    email: EmailStr
-    password: Annotated[str, MinLen(8)]
-
-    class Config:
-        schema_extra = {
-            "example": {"email": "user@email.com", "password": "TestPassword123!"}
-        }
+class UserSignInRequest(BaseSchema):
+    email: EmailStr = Field(..., description="User's email address")
+    password: Annotated[str, MinLen(8)] = Field(..., description="User's password")
 
 
-class ConfirmForgotPasswordRequest(BaseModel):
-    email: EmailStr
-    confirmation_code: Annotated[str, MaxLen(6)]
-    new_password: Annotated[str, MinLen(8)]
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "email": "user@email.com",
-                "confirmation_code": "123456",
-                "new_password": "TestPassword123!",
-            }
-        }
+class ConfirmForgotPasswordRequest(BaseSchema):
+    email: EmailStr = Field(..., description="User's email address")
+    confirmation_code: Annotated[str, MaxLen(6)] = Field(
+        ..., description="6-digit confirmation code"
+    )
+    new_password: Annotated[str, MinLen(8)] = Field(..., description="New password")
 
 
-class ChangePasswordRequest(BaseModel):
-    old_password: Annotated[str, MinLen(8)]
-    new_password: Annotated[str, MinLen(8)]
-    access_token: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "old_password": "OldPassword123!",
-                "new_password": "NewPassword123!",
-                "access_token": "Bearer token",
-            }
-        }
+class ChangePasswordRequest(BaseSchema):
+    old_password: Annotated[str, MinLen(8)] = Field(..., description="Current password")
+    new_password: Annotated[str, MinLen(8)] = Field(..., description="New password")
+    access_token: str = Field(..., description="Valid access token")
 
 
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "refresh_token": "Bearer token",
-            }
-        }
+class RefreshTokenRequest(BaseSchema):
+    refresh_token: str = Field(..., description="Valid refresh token")
 
 
-class AccessTokenRequest(BaseModel):
-    access_token: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "access_token": "Bearer token",
-            }
-        }
+class UserIdResponse(BaseSchema):
+    sub: str = Field(..., description="User ID")
 
 
-class MessageResponse(BaseModel):
-    message: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "message": "Account confirmed successfully",
-            }
-        }
+class MessageResponse(BaseSchema):
+    message: str = Field(..., description="Response message")
 
 
-class UserResponse(BaseModel):
-    id: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "id": "1234567890",
-            }
-        }
+class AuthResponse(BaseSchema):
+    AccessToken: str = Field(..., description="JWT access token")
+    RefreshToken: str = Field(..., description="JWT refresh token")
+    IdToken: str = Field(..., description="JWT ID token")
+    TokenType: str = Field(..., description="Token type (Bearer)")
+    ExpiresIn: int = Field(..., description="Token expiration in seconds")
 
 
-class AuthResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-    id_token: str
-    token_type: str
-    expires_in: int
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "access_token": "Bearer token",
-                "refresh_token": "Bearer token",
-                "id_token": "Bearer token",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-            }
-        }
+class UserProfileResponse(BaseSchema):
+    sub: str = Field(..., description="Unique identifier for the user")
+    groups: list[str] = Field(
+        ..., alias="cognito:groups", description="User's group memberships"
+    )
+    issuer: str = Field(..., alias="iss", description="Token issuer URL")
+    client_id: str = Field(..., description="OAuth 2.0 client identifier")
+    origin_jti: str = Field(..., description="Original JWT ID")
+    event_id: str = Field(..., description="Event identifier")
+    token_use: str = Field(..., description="Token usage type")
+    scope: str = Field(..., description="OAuth 2.0 scope")
+    auth_time: int = Field(..., description="Authentication timestamp")
+    exp: int = Field(..., description="Token expiration timestamp")
+    iat: int = Field(..., description="Token issuance timestamp")
+    jti: str = Field(..., description="JWT ID")
+    username: str = Field(..., description="User's username")

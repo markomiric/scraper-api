@@ -2,27 +2,29 @@ import logging
 from typing import Any, Dict
 
 from botocore.exceptions import ClientError
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import EmailStr
 
 from src.aws.cognito import Cognito
 from src.dependencies import get_cognito, get_current_user, has_roles
 from src.user.schema import (
-    AccessTokenRequest,
     AuthResponse,
     ChangePasswordRequest,
     ConfirmForgotPasswordRequest,
     ConfirmUserRequest,
     MessageResponse,
     RefreshTokenRequest,
-    UserResponse,
+    UserIdResponse,
+    UserProfileResponse,
     UserSignInRequest,
     UserSignUpRequest,
 )
 
 logger = logging.getLogger(__name__)
 
+bearer_scheme = HTTPBearer()
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])  # Changed tags to a list
 
@@ -37,16 +39,16 @@ def handle_cognito_error(e: ClientError) -> None:
 
 
 @router.post(
-    "/sign_up", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+    "/sign_up", response_model=UserIdResponse, status_code=status.HTTP_201_CREATED
 )
 async def sign_up(
     user: UserSignUpRequest, cognito: Cognito = Depends(get_cognito)
-) -> UserResponse:
+) -> UserIdResponse:
     """Register a new user."""
     try:
         response = cognito.sign_up(user)
         logger.info(f"User registered: {user.email}")
-        return UserResponse(id=response["UserSub"])
+        return UserIdResponse(sub=response["UserSub"])
     except ClientError as e:
         handle_cognito_error(e)
 
@@ -148,6 +150,7 @@ async def change_password(
 async def authenticate_refresh_token(
     payload: RefreshTokenRequest, cognito: Cognito = Depends(get_cognito)
 ):
+    """Authenticate user with refresh token."""
     try:
         response = cognito.authenticate_refresh_token(payload.refresh_token)
     except ClientError as e:
@@ -155,13 +158,14 @@ async def authenticate_refresh_token(
     return JSONResponse(content=response["AuthenticationResult"], status_code=200)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(
-    access_token: AccessTokenRequest, cognito: Cognito = Depends(get_cognito)
+@router.post("/sign_out", status_code=status.HTTP_204_NO_CONTENT)
+async def sign_out(
+    token: HTTPAuthorizationCredentials = Security(bearer_scheme),
+    cognito: Cognito = Depends(get_cognito),
 ) -> None:
-    """Logout user by revoking tokens."""
+    """Sign out user by revoking tokens."""
     try:
-        cognito.logout(access_token)
+        cognito.sign_out(token.credentials)
         logger.info("User logged out")
     except ClientError as e:
         handle_cognito_error(e)
@@ -174,10 +178,10 @@ async def admin_endpoint(_: Any = Depends(has_roles(["Admin"]))) -> MessageRespo
     return MessageResponse(message="Welcome, admin user")
 
 
-@router.get("/me", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
+@router.get("/me", response_model=UserProfileResponse, status_code=status.HTTP_200_OK)
 async def me(
     current_user: Dict[str, Any] = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> UserProfileResponse:
     """Retrieve current user's information."""
-    logger.info(f"User profile accessed: {current_user.get('email')}")
-    return current_user
+    logger.info(f"User profile accessed: {current_user.get('username')}")
+    return UserProfileResponse(**current_user)
