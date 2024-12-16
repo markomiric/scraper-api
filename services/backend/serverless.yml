@@ -58,6 +58,13 @@ functions:
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60
+      
+      - http:
+          path: /api/v1/health
+          method: get
+          cors:
+            origin: ${env:ALLOWED_ORIGINS}
+            maxAge: 60
 
       - http:
           path: /docs
@@ -68,7 +75,7 @@ functions:
 
       - http:
           path: /openapi.json
-          method: any
+          method: get
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60

@@ -29,6 +29,11 @@ def user_email():
 
 
 @pytest.fixture
+def admin_email():
+    return "admin@email.com"
+
+
+@pytest.fixture
 def token(user_email):
     token = jwt.encode(
         {
@@ -36,6 +41,27 @@ def token(user_email):
             "email": user_email,
             "cognito:username": user_email,
             "cognito:groups": ["User"],
+            "token_use": "id",
+            "auth_time": int(time.time()),
+            "exp": int(time.time()) + 3600,
+            "iat": int(time.time()),
+            "iss": "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_MockPoolId",
+            "aud": "MockClientId",
+        },
+        "test-secret",
+        algorithm="HS256",
+    )
+    return token
+
+
+@pytest.fixture
+def admin_token(admin_email):
+    token = jwt.encode(
+        {
+            "sub": "0987654321",
+            "email": admin_email,
+            "cognito:username": admin_email,
+            "cognito:groups": ["Admin"],
             "token_use": "id",
             "auth_time": int(time.time()),
             "exp": int(time.time()) + 3600,

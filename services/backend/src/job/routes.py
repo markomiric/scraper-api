@@ -25,7 +25,7 @@ def create_job(
         job_url=job_request.job_url,
         description=job_request.description,
         logo_url=job_request.logo_url,
-        author=current_user["email"],  # Set author to user's email
+        author=current_user["email"],
     )
     job_store.add(job)
 

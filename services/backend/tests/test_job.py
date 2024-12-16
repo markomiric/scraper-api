@@ -68,7 +68,7 @@ def test_create_job(client, user_email, token):
 
     # Make request with 'Bearer' prefix
     response = client.post(
-        "/api/jobs",
+        "/api/v1/jobs",
         json=job_data,
         headers={"Authorization": f"Bearer {token}"},
     )

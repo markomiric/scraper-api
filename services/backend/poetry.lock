@@ -738,6 +738,23 @@ files = [
 ]
 
 [[package]]
+name = "joserfc"
+version = "1.0.1"
+description = "The ultimate Python library for JOSE RFCs, including JWS, JWE, JWK, JWA, JWT"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "joserfc-1.0.1-py3-none-any.whl", hash = "sha256:ae16f56b4091181cab5148a75610bb40d2452db17d09169598605250fa40f5dd"},
+    {file = "joserfc-1.0.1.tar.gz", hash = "sha256:c4507be82d681245f461710ffca1fa809fd288f49bc3ce4dba0b1c591700a686"},
+]
+
+[package.dependencies]
+cryptography = "*"
+
+[package.extras]
+drafts = ["pycryptodome"]
+
+[[package]]
 name = "mangum"
 version = "0.19.0"
 description = "AWS Lambda support for ASGI applications"
@@ -922,6 +939,17 @@ python-versions = ">=3.8"
 files = [
     {file = "packaging-24.2-py3-none-any.whl", hash = "sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759"},
     {file = "packaging-24.2.tar.gz", hash = "sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f"},
+]
+
+[[package]]
+name = "pip"
+version = "24.3.1"
+description = "The PyPA recommended tool for installing Python packages."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pip-24.3.1-py3-none-any.whl", hash = "sha256:3790624780082365f47549d032f3770eeb2b1e8bd1f7b2e02dace1afa361b4ed"},
+    {file = "pip-24.3.1.tar.gz", hash = "sha256:ebcb60557f2aefabc2e0f918751cd24ea0d56d8ec5445fe1807f1d2109660b99"},
 ]
 
 [[package]]
@@ -1239,6 +1267,7 @@ files = [
 ]
 
 [package.dependencies]
+cryptography = {version = ">=3.4.0", optional = true, markers = "extra == \"cryptography\""}
 ecdsa = "!=0.15"
 pyasn1 = "*"
 rsa = "*"
@@ -1836,4 +1865,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "cf40773ddbf4d45d7b45d77489aa2535a325d7d4cda39f269b6ec8ce8edb0c18"
+content-hash = "61b41e86c52aec39a8f56d037675fe0f5f31ecb888b6ad7bd48eeff105974095"
