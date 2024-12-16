@@ -52,7 +52,7 @@ functions:
     memorySize: 512
     events:
       - http:
-          path: /
+          path: /docs
           method: any
           cors:
             origin: ${env:ALLOWED_ORIGINS}
