@@ -47,7 +47,7 @@ class JobStore:
             job_url=record["Item"]["job_url"],
             description=record["Item"]["description"],
             logo_url=record["Item"]["logo_url"],
-            status=record["Item"]["status"],
+            status=JobStatus[record["Item"]["status"]],
             author=record["Item"]["author"],
             created_at=record["Item"]["created_at"],
             updated_at=record["Item"]["updated_at"],
@@ -95,3 +95,75 @@ class JobStore:
                 break
 
         return jobs
+
+    def get_all(self, author: str):
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
+        table = dynamodb.Table(self.table_name)
+        response = table.query(KeyConditionExpression=Key("PK").eq(f"#{author}"))
+        jobs = [
+            Job(
+                id=UUID(item["id"]),
+                title=item["title"],
+                company=item["company"],
+                location=item["location"],
+                job_url=item["job_url"],
+                description=item["description"],
+                logo_url=item.get("logo_url"),
+                status=JobStatus[item["status"]],
+                author=item["author"],
+                created_at=item["created_at"],
+                updated_at=item["updated_at"],
+            )
+            for item in response["Items"]
+        ]
+        return jobs
+
+    def update(self, job: Job) -> None:
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
+        table = dynamodb.Table(self.table_name)
+        table.update_item(
+            Key={
+                "PK": f"#{job.author}",
+                "SK": f"#{job.id}",
+            },
+            UpdateExpression="""
+                SET #title=:title, 
+                    #company=:company, 
+                    #location=:location,
+                    #job_url=:job_url, 
+                    #description=:description, 
+                    #logo_url=:logo_url,
+                    #status=:status, 
+                    #updated_at=:updated_at
+            """,
+            ExpressionAttributeNames={
+                "#title": "title",
+                "#company": "company",
+                "#location": "location",
+                "#job_url": "job_url",
+                "#description": "description",
+                "#logo_url": "logo_url",
+                "#status": "status",
+                "#updated_at": "updated_at",
+            },
+            ExpressionAttributeValues={
+                ":title": job.title,
+                ":company": job.company,
+                ":location": job.location,
+                ":job_url": job.job_url,
+                ":description": job.description,
+                ":logo_url": job.logo_url,
+                ":status": job.status.value,
+                ":updated_at": job.updated_at,
+            },
+        )
+
+    def delete(self, job_id: str, author: str) -> None:
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
+        table = dynamodb.Table(self.table_name)
+        table.delete_item(
+            Key={
+                "PK": f"#{author}",
+                "SK": f"#{job_id}",
+            }
+        )

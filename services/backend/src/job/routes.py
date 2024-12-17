@@ -1,11 +1,13 @@
+import datetime
 import uuid
+from typing import List
 
 from fastapi import APIRouter, Depends
 from starlette import status
 
 from src.dependencies import get_current_user, get_job_store
 from src.job.model import Job
-from src.job.schema import CreateJobRequest, JobResponse
+from src.job.schema import CreateJobRequest, JobResponse, UpdateJobRequest
 from src.job.store import JobStore
 
 router = APIRouter(prefix="/jobs", tags=["Job"])
@@ -30,3 +32,46 @@ def create_job(
     job_store.add(job)
 
     return job
+
+
+@router.get("/", response_model=List[JobResponse])
+def get_jobs(
+    job_store: JobStore = Depends(get_job_store), current_user=Depends(get_current_user)
+):
+    jobs = job_store.get_all(current_user["email"])
+    return jobs
+
+
+@router.get("/{job_id}", response_model=JobResponse)
+def get_job(
+    job_id: str,
+    job_store: JobStore = Depends(get_job_store),
+    current_user=Depends(get_current_user),
+):
+    job = job_store.get(job_id, current_user["email"])
+    return job
+
+
+@router.put("/{job_id}", response_model=JobResponse)
+def update_job(
+    job_id: str,
+    job_request: UpdateJobRequest,
+    job_store: JobStore = Depends(get_job_store),
+    current_user=Depends(get_current_user),
+):
+    job = job_store.get(job_id, current_user["email"])
+    update_data = job_request.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(job, field, value)
+    job.updated_at = datetime.datetime.now(datetime.UTC).isoformat()
+    job_store.update(job)
+    return job
+
+
+@router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_job(
+    job_id: str,
+    job_store: JobStore = Depends(get_job_store),
+    current_user=Depends(get_current_user),
+):
+    job_store.delete(job_id, current_user["email"])

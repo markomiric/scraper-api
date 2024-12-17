@@ -60,9 +60,8 @@ def test_create_job(client, user_email, token):
         "title": "Python Developer",
         "company": "Tech Corp",
         "location": "Berlin, Germany",
+        "description": "Python role",
         "job_url": "https://example.com/job/123",
-        "author": user_email,
-        "description": "We are looking for a Python developer",
         "logo_url": "https://example.com/logo.png",
     }
 
@@ -85,3 +84,155 @@ def test_create_job(client, user_email, token):
     assert body["author"] == user_email
     assert "created_at" in body
     assert "updated_at" in body
+
+
+def test_get_all_jobs(client, job_store, user_email, token):
+    job1 = Job.create(
+        id_=uuid.uuid4(),
+        title="Python Developer",
+        company="Tech Corp",
+        location="Berlin",
+        job_url="https://example.com/job/1",
+        description="Python role",
+        logo_url="https://example.com/logo1.png",
+        author=user_email,
+    )
+    job2 = Job.create(
+        id_=uuid.uuid4(),
+        title="Senior Developer",
+        company="Other Corp",
+        location="Remote",
+        job_url="https://example.com/job/2",
+        description="Senior role",
+        logo_url="https://example.com/logo2.png",
+        author=user_email,
+    )
+    job_store.add(job1)
+    job_store.add(job2)
+
+    response = client.get(
+        "/api/v1/jobs",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = response.json()
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(body) == 2
+    assert any(job["id"] == str(job1.id) for job in body)
+    assert any(job["id"] == str(job2.id) for job in body)
+
+
+def test_get_job_by_id(client, job_store, user_email, token):
+    job = Job.create(
+        id_=uuid.uuid4(),
+        title="Python Developer",
+        company="Tech Corp",
+        location="Berlin",
+        job_url="https://example.com/job/1",
+        description="Python role",
+        logo_url="https://example.com/logo1.png",
+        author=user_email,
+    )
+    job_store.add(job)
+
+    response = client.get(
+        f"/api/v1/jobs/{job.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = response.json()
+
+    assert response.status_code == status.HTTP_200_OK
+    assert body["id"] == str(job.id)
+    assert body["title"] == job.title
+    assert body["status"] == job.status.value
+
+
+def test_update_job(client, job_store, user_email, token):
+    job = Job.create(
+        id_=uuid.uuid4(),
+        title="Python Developer",
+        company="Tech Corp",
+        location="Berlin",
+        job_url="https://example.com/job/1",
+        description="Python role",
+        logo_url="https://example.com/logo1.png",
+        author=user_email,
+    )
+    job_store.add(job)
+
+    update_data = {
+        "title": "Senior Python Developer",
+        "location": "Remote",
+        "status": "ACTIVE",
+    }
+
+    response = client.put(
+        f"/api/v1/jobs/{job.id}",
+        json=update_data,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = response.json()
+
+    assert response.status_code == status.HTTP_200_OK
+    assert body["title"] == update_data["title"]
+    assert body["location"] == update_data["location"]
+    assert body["status"] == update_data["status"]
+    assert body["company"] == job.company  # Unchanged field
+
+
+def test_delete_job(client, job_store, user_email, token):
+    job = Job.create(
+        id_=uuid.uuid4(),
+        title="Python Developer",
+        company="Tech Corp",
+        location="Berlin",
+        job_url="https://example.com/job/1",
+        description="Python role",
+        logo_url="https://example.com/logo1.png",
+        author=user_email,
+    )
+    job_store.add(job)
+
+    response = client.delete(
+        f"/api/v1/jobs/{job.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    try:
+        job_store.get(str(job.id), user_email)
+        assert False, "Job should have been deleted"
+    except Exception:
+        pass
+
+
+def test_update_job_maintains_unchanged_fields(client, job_store, user_email, token):
+    job = Job.create(
+        id_=uuid.uuid4(),
+        title="Python Developer",
+        company="Tech Corp",
+        location="Berlin",
+        job_url="https://example.com/job/1",
+        description="Python role",
+        logo_url="https://example.com/logo1.png",
+        author=user_email,
+    )
+    job_store.add(job)
+
+    update_data = {"title": "Senior Python Developer"}
+
+    response = client.put(
+        f"/api/v1/jobs/{job.id}",
+        json=update_data,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = response.json()
+
+    assert response.status_code == status.HTTP_200_OK
+    assert body["title"] == update_data["title"]
+    assert body["location"] == job.location
+    assert body["company"] == job.company
+    assert body["job_url"] == job.job_url
+    assert body["description"] == job.description
+    assert body["logo_url"] == job.logo_url

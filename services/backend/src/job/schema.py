@@ -12,9 +12,18 @@ class CreateJobRequest(BaseSchema):
     company: str = Field(..., min_length=1, description="Company name")
     location: str = Field(..., min_length=1, description="Job location")
     job_url: str = Field(..., min_length=1, description="URL to job posting")
-    author: str = Field(..., min_length=1, description="Email of job poster")
     description: str = Field(default="", description="Job description")
     logo_url: Optional[str] = Field(default=None, description="Company logo URL")
+
+
+class UpdateJobRequest(BaseSchema):
+    title: Optional[str] = Field(None, description="Job title")
+    company: Optional[str] = Field(None, description="Company name")
+    location: Optional[str] = Field(None, description="Job location")
+    job_url: Optional[str] = Field(None, description="URL to job posting")
+    description: Optional[str] = Field(None, description="Job description")
+    logo_url: Optional[str] = Field(None, description="Company logo URL")
+    status: Optional[JobStatus] = Field(None, description="Job status")
 
 
 class JobResponse(BaseSchema):
