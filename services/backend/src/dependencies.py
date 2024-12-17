@@ -11,6 +11,20 @@ from src.config import get_settings
 from src.job.store import JobStore
 
 settings = get_settings()
+
+
+def get_job_store() -> JobStore:
+    return JobStore(settings.TABLE_NAME, dynamodb_url=settings.DYNAMODB_URL)
+
+
+def get_cognito() -> Cognito:
+    return Cognito(
+        region_name=settings.AWS_REGION,
+        user_pool_id=settings.AWS_USER_POOL_ID,
+        user_pool_client_id=settings.AWS_USER_POOL_CLIENT_ID,
+    )
+
+
 bearer_scheme = HTTPBearer()
 
 _httpx_client: httpx.AsyncClient = None
@@ -29,6 +43,13 @@ async def get_jwks():
         _jwks_cache = response.json()
 
     return _jwks_cache
+
+
+def _convert_attribute_value(name: str, value: str) -> Any:
+    """Convert Cognito attribute values to appropriate Python types."""
+    if name == "email_verified":
+        return value.lower() == "true"
+    return value
 
 
 async def get_current_user(
@@ -67,9 +88,18 @@ async def get_current_user(
                 audience=settings.AWS_USER_POOL_CLIENT_ID,
                 issuer=f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.AWS_USER_POOL_ID}",
             )
+        cognito = get_cognito()
+        user = cognito.get_user(token)
+        user_attributes_dict = {
+            attr["Name"]: _convert_attribute_value(attr["Name"], attr["Value"])
+            for attr in user.get("UserAttributes", [])
+        }
+        decoded_token.update(user_attributes_dict)
         return decoded_token
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Not authorized")
 
 
 def has_roles(required_roles: list):
@@ -79,15 +109,3 @@ def has_roles(required_roles: list):
             raise HTTPException(status_code=403, detail="Access forbidden")
 
     return role_checker
-
-
-def get_job_store() -> JobStore:
-    return JobStore(settings.TABLE_NAME, dynamodb_url=settings.DYNAMODB_URL)
-
-
-def get_cognito() -> Cognito:
-    return Cognito(
-        region_name=settings.AWS_REGION,
-        user_pool_id=settings.AWS_USER_POOL_ID,
-        user_pool_client_id=settings.AWS_USER_POOL_CLIENT_ID,
-    )

@@ -59,6 +59,9 @@ class AuthResponse(BaseSchema):
 
 class UserProfileResponse(BaseSchema):
     sub: str = Field(..., description="Unique identifier for the user")
+    email: EmailStr = Field(..., description="User's email address")
+    email_verified: bool = Field(..., description="Email verification status")
+    username: str = Field(..., description="User's username")
     groups: list[str] = Field(
         ..., alias="cognito:groups", description="User's group memberships"
     )
@@ -72,4 +75,3 @@ class UserProfileResponse(BaseSchema):
     exp: int = Field(..., description="Token expiration timestamp")
     iat: int = Field(..., description="Token issuance timestamp")
     jti: str = Field(..., description="JWT ID")
-    username: str = Field(..., description="User's username")

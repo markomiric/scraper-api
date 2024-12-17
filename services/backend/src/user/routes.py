@@ -183,5 +183,5 @@ async def me(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> UserProfileResponse:
     """Retrieve current user's information."""
-    logger.info(f"User profile accessed: {current_user.get('username')}")
+    logger.info(f"User profile accessed: {current_user.get('email')}")
     return UserProfileResponse(**current_user)

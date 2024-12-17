@@ -1,5 +1,6 @@
 import os
 import time
+from unittest.mock import patch
 
 import boto3
 import pytest
@@ -13,7 +14,21 @@ from src.main import app
 
 
 @pytest.fixture
-def client(job_store):
+def mock_cognito_get_user():
+    with patch("src.aws.cognito.Cognito.get_user") as mock:
+        mock.return_value = {
+            "UserAttributes": [
+                {"Name": "sub", "Value": "1234567890"},
+                {"Name": "email", "Value": "user@email.com"},
+                {"Name": "email_verified", "Value": "true"},
+                {"Name": "username", "Value": "user@email.com"},
+            ]
+        }
+        yield mock
+
+
+@pytest.fixture
+def client(job_store, mock_cognito_get_user):
     app.dependency_overrides[get_job_store] = lambda: job_store
     return TestClient(app)
 
@@ -35,18 +50,22 @@ def admin_email():
 
 @pytest.fixture
 def token(user_email):
+    current_time = int(time.time())
     token = jwt.encode(
         {
             "sub": "1234567890",
-            "email": user_email,
-            "cognito:username": user_email,
             "cognito:groups": ["User"],
-            "token_use": "id",
-            "auth_time": int(time.time()),
-            "exp": int(time.time()) + 3600,
-            "iat": int(time.time()),
             "iss": "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_MockPoolId",
-            "aud": "MockClientId",
+            "client_id": "test-client-id",
+            "origin_jti": "test-origin-jti",
+            "event_id": "test-event-id",
+            "token_use": "id",
+            "scope": "aws.cognito.signin.user.admin",
+            "auth_time": current_time,
+            "exp": current_time + 3600,
+            "iat": current_time,
+            "jti": "test-jti",
+            "username": user_email,
         },
         "test-secret",
         algorithm="HS256",
@@ -56,18 +75,23 @@ def token(user_email):
 
 @pytest.fixture
 def admin_token(admin_email):
+    current_time = int(time.time())
     token = jwt.encode(
         {
             "sub": "0987654321",
             "email": admin_email,
-            "cognito:username": admin_email,
+            "username": admin_email,
             "cognito:groups": ["Admin"],
             "token_use": "id",
-            "auth_time": int(time.time()),
-            "exp": int(time.time()) + 3600,
-            "iat": int(time.time()),
+            "auth_time": current_time,
+            "exp": current_time + 3600,
+            "iat": current_time,
             "iss": "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_MockPoolId",
-            "aud": "MockClientId",
+            "client_id": "test-client-id",
+            "origin_jti": "test-origin-jti",
+            "event_id": "test-event-id",
+            "scope": "aws.cognito.signin.user.admin",
+            "jti": "test-jti",
         },
         "test-secret",
         algorithm="HS256",

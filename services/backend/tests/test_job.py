@@ -66,7 +66,6 @@ def test_create_job(client, user_email, token):
         "logo_url": "https://example.com/logo.png",
     }
 
-    # Make request with 'Bearer' prefix
     response = client.post(
         "/api/v1/jobs",
         json=job_data,
@@ -74,7 +73,6 @@ def test_create_job(client, user_email, token):
     )
     body = response.json()
 
-    # Assertions
     assert response.status_code == status.HTTP_201_CREATED
     assert uuid.UUID(body["id"])
     assert body["title"] == job_data["title"]

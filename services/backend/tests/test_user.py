@@ -15,7 +15,7 @@ def test_sign_up(mock_sign_up, client):
     body = response.json()
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert body["id"] == "test-user-sub"
+    assert body["sub"] == "test-user-sub"
 
 
 @patch("src.aws.cognito.Cognito.confirm_sign_up")
@@ -71,15 +71,22 @@ def test_forgot_password(mock_forgot_password, client):
     assert body["message"] == "Password reset code sent to your email address"
 
 
-def test_get_current_user(client, token):
+def test_get_current_user(client, token, user_email):
     headers = {"Authorization": f"Bearer {token}"}
 
     response = client.get("/api/v1/auth/me", headers=headers)
     body = response.json()
 
     assert response.status_code == status.HTTP_200_OK
-    assert "email" in body
+    assert body["sub"] == "1234567890"
     assert body["email"] == "user@email.com"
+    assert body["email_verified"] is True
+    assert body["cognito:groups"] == ["User"]
+    assert body["token_use"] == "id"
+    assert body["username"] == user_email
+    assert "auth_time" in body
+    assert "exp" in body
+    assert "iat" in body
 
 
 @patch("src.aws.cognito.Cognito.authenticate_refresh_token")

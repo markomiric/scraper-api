@@ -35,6 +35,9 @@ class Cognito:
             ClientId=self.user_pool_client_id, Username=email
         )
 
+    def get_user(self, access_token: str):
+        return self.client.get_user(AccessToken=access_token)
+
     def admin_get_user(self, email: EmailStr):
         return self.client.admin_get_user(UserPoolId=self.user_pool_id, Username=email)
 
