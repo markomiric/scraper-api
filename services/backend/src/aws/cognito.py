@@ -1,7 +1,7 @@
 import boto3
 from pydantic import EmailStr
 
-from src.user.schema import (
+from src.auth.schema import (
     ChangePasswordRequest,
     ConfirmForgotPasswordRequest,
     ConfirmUserRequest,

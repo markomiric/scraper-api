@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_snake
 
 
@@ -17,3 +17,7 @@ class BaseSchema(BaseModel):
         validate_default=True,
         extra="forbid",
     )
+
+
+class MessageResponse(BaseSchema):
+    message: str = Field(..., description="Response message")

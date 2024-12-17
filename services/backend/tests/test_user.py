@@ -74,7 +74,7 @@ def test_forgot_password(mock_forgot_password, client):
 def test_get_current_user(client, token, user_email):
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = client.get("/api/v1/auth/me", headers=headers)
+    response = client.get("/api/v1/users/me", headers=headers)
     body = response.json()
 
     assert response.status_code == status.HTTP_200_OK
@@ -117,7 +117,7 @@ def test_refresh_token(mock_refresh_token, client):
 def test_admin_endpoint(client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    response = client.get("/api/v1/auth/admin", headers=headers)
+    response = client.get("/api/v1/users/admin", headers=headers)
     body = response.json()
 
     assert response.status_code == status.HTTP_200_OK
@@ -127,5 +127,5 @@ def test_admin_endpoint(client, admin_token):
 def test_admin_endpoint_unauthorized(client, token):
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = client.get("/api/v1/auth/admin", headers=headers)
+    response = client.get("/api/v1/users/admin", headers=headers)
     assert response.status_code == status.HTTP_403_FORBIDDEN
