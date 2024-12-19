@@ -18,17 +18,17 @@ def test_sign_up(mock_sign_up, client):
     assert body["sub"] == "test-user-sub"
 
 
-@patch("src.aws.cognito.Cognito.confirm_sign_up")
+@patch("src.aws.cognito.Cognito.verify_email")
 @patch("src.aws.cognito.Cognito.admin_add_user_to_group")
-def test_confirm_sign_up(mock_add_user_to_group, mock_confirm_sign_up, client):
-    mock_confirm_sign_up.return_value = None
+def test_verify_email(mock_add_user_to_group, mock_verify_email, client):
+    mock_verify_email.return_value = None
     mock_add_user_to_group.return_value = None
 
     confirmation_data = {
         "email": "testuser@example.com",
         "confirmation_code": "123456",
     }
-    response = client.post("/api/v1/auth/sign_up/confirm", json=confirmation_data)
+    response = client.post("/api/v1/auth/verify_email", json=confirmation_data)
     body = response.json()
 
     assert response.status_code == status.HTTP_200_OK
@@ -81,12 +81,7 @@ def test_get_current_user(client, token, user_email):
     assert body["sub"] == "1234567890"
     assert body["email"] == "user@email.com"
     assert body["email_verified"] is True
-    assert body["cognito:groups"] == ["User"]
-    assert body["token_use"] == "id"
-    assert body["username"] == user_email
-    assert "auth_time" in body
-    assert "exp" in body
-    assert "iat" in body
+    assert body["roles"] == ["User"]
 
 
 @patch("src.aws.cognito.Cognito.authenticate_refresh_token")

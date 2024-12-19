@@ -25,4 +25,5 @@ async def me(
 ) -> UserProfileResponse:
     """Retrieve current user's information."""
     logger.info(f"User profile accessed: {current_user.get('email')}")
+
     return UserProfileResponse(**current_user)

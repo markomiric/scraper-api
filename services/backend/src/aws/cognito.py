@@ -23,7 +23,7 @@ class Cognito:
             Password=user.password,
         )
 
-    def confirm_sign_up(self, data: ConfirmUserRequest):
+    def verify_email(self, data: ConfirmUserRequest):
         return self.client.confirm_sign_up(
             ClientId=self.user_pool_client_id,
             Username=data.email,

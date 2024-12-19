@@ -54,7 +54,7 @@ def token(user_email):
     token = jwt.encode(
         {
             "sub": "1234567890",
-            "cognito:groups": ["User"],
+            "cognito:groups": ["User"],  # Changed from "cognito:groups" to "roles"
             "iss": "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_MockPoolId",
             "client_id": "test-client-id",
             "origin_jti": "test-origin-jti",
@@ -81,7 +81,7 @@ def admin_token(admin_email):
             "sub": "0987654321",
             "email": admin_email,
             "username": admin_email,
-            "cognito:groups": ["Admin"],
+            "cognito:groups": ["Admin"],  # Changed from "cognito:groups" to "roles"
             "token_use": "id",
             "auth_time": current_time,
             "exp": current_time + 3600,

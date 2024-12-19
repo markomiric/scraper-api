@@ -94,6 +94,9 @@ async def get_current_user(
             attr["Name"]: _convert_attribute_value(attr["Name"], attr["Value"])
             for attr in user.get("UserAttributes", [])
         }
+        # Replace 'cognito:groups' with 'roles'
+        roles = decoded_token.pop("cognito:groups", [])
+        user_attributes_dict["roles"] = roles
         decoded_token.update(user_attributes_dict)
         return decoded_token
     except JWTError:
@@ -104,7 +107,7 @@ async def get_current_user(
 
 def has_roles(required_roles: list):
     def role_checker(current_user=Depends(get_current_user)):
-        groups = current_user.get("cognito:groups", [])
+        groups = current_user.get("roles", [])
         if not any(role in groups for role in required_roles):
             raise HTTPException(status_code=403, detail="Access forbidden")
 

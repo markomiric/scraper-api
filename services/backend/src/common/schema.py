@@ -15,7 +15,7 @@ class BaseSchema(BaseModel):
         ser_json_timedelta="iso8601",
         ser_json_bytes="base64",
         validate_default=True,
-        extra="forbid",
+        # extra="forbid",
     )
 
 

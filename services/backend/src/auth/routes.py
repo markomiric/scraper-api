@@ -52,14 +52,14 @@ async def sign_up(
 
 
 @router.post(
-    "/sign_up/confirm", response_model=MessageResponse, status_code=status.HTTP_200_OK
+    "/verify_email", response_model=MessageResponse, status_code=status.HTTP_200_OK
 )
-async def confirm_sign_up(
+async def verify_email(
     data: ConfirmUserRequest, cognito: Cognito = Depends(get_cognito)
 ) -> MessageResponse:
     """Confirm user registration."""
     try:
-        cognito.confirm_sign_up(data)
+        cognito.verify_email(data)
         cognito.admin_add_user_to_group(username=data.email, group_name="User")
         logger.info(f"User confirmed: {data.email}")
         return MessageResponse(message="Account confirmed successfully")
