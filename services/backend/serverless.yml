@@ -5,6 +5,9 @@ useDotenv: true
 
 provider:
   name: aws
+  logs:
+    restApi:
+      level: INFO, ERROR
   runtime: python3.13
   region: ${opt:region, 'eu-central-1'}
   stage: ${opt:stage, 'development'}
@@ -44,6 +47,7 @@ provider:
             - !Sub
                 - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}
                 - UserPoolId: !Ref CognitoUserPool
+
 
 functions:
   API:
@@ -86,6 +90,8 @@ functions:
           method: any
           cors:
             origin: ${env:ALLOWED_ORIGINS}
+            headers: "*"
+              # - Authorization
             maxAge: 60
           authorizer:
             name: JobsAPIAuthorizer
@@ -94,7 +100,6 @@ functions:
               Fn::GetAtt:
                 - CognitoUserPool
                 - Arn
-            scopes: []
   # cron:
   #   handler: src.scraper.run
   #   events:
