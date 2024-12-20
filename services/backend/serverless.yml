@@ -7,7 +7,7 @@ provider:
   name: aws
   logs:
     restApi:
-      level: INFO, ERROR
+      level: ERROR
   runtime: python3.13
   region: ${opt:region, 'eu-central-1'}
   stage: ${opt:stage, 'development'}
