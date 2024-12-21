@@ -17,6 +17,10 @@ class CreateJobRequest(BaseSchema):
 
 
 class UpdateJobRequest(BaseSchema):
+    """
+    Schema used to partially update a job.
+    """
+
     title: Optional[str] = Field(None, description="Job title")
     company: Optional[str] = Field(None, description="Company name")
     location: Optional[str] = Field(None, description="Job location")
@@ -27,6 +31,10 @@ class UpdateJobRequest(BaseSchema):
 
 
 class JobResponse(BaseSchema):
+    """
+    Schema representing job data returned to the client.
+    """
+
     id: UUID = Field(..., description="Unique job identifier")
     title: str = Field(..., description="Job title")
     company: str = Field(..., description="Company name")

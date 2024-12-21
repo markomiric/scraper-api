@@ -7,6 +7,9 @@ from src.job.store import JobStore
 
 
 def test_added_job_retrieved_by_id(dynamodb_table):
+    """
+    Verifies that a newly added job can be retrieved by its ID.
+    """
     repository = JobStore(table_name=dynamodb_table)
     job = Job.create(
         id_=uuid.uuid4(),
@@ -25,6 +28,9 @@ def test_added_job_retrieved_by_id(dynamodb_table):
 
 
 def test_active_jobs_retrieved_by_status(dynamodb_table):
+    """
+    Ensures that only active jobs are returned for a given author.
+    """
     repository = JobStore(table_name=dynamodb_table)
     active_job = Job.create(
         uuid.uuid4(),

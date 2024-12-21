@@ -5,6 +5,10 @@ from uuid import UUID
 
 
 class JobStatus(str, Enum):
+    """
+    Enumeration of valid Job statuses.
+    """
+
     ACTIVE = "ACTIVE"
     CLOSED = "CLOSED"
     DRAFT = "DRAFT"
@@ -28,6 +32,9 @@ class Job:
     def create(
         cls, id_, title, company, location, job_url, description, logo_url, author
     ) -> "Job":
+        """
+        Factory method to create a new Job with default DRAFT status.
+        """
         status = JobStatus.DRAFT
         created_at = datetime.datetime.now(datetime.UTC).isoformat()
         updated_at = datetime.datetime.now(datetime.UTC).isoformat()

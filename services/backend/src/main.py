@@ -9,11 +9,16 @@ from src.health.routes import router as health_router
 from src.job.routes import router as job_router
 from src.user.routes import router as user_router
 
-stage = os.environ.get("STAGE", "")
-root_path = f"/{stage}" if stage else ""
+environment = os.environ.get("STAGE", "")
+root_path = f"/{environment}" if environment else ""
 
 
 def create_application() -> FastAPI:
+    """
+    Create and configure FastAPI application.
+    Returns:
+        FastAPI: Configured FastAPI application instance.
+    """
     application = FastAPI(title="KamaCareer", root_path=root_path)
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(user_router, prefix="/api/v1")

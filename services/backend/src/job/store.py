@@ -8,6 +8,10 @@ from src.job.model import Job, JobStatus
 
 
 class JobStore:
+    """
+    DynamoDB-based implementation for storing and retrieving Job entities.
+    """
+
     def __init__(self, table_name, dynamodb_url=None):
         self.table_name = table_name
         self.dynamodb_url = dynamodb_url
@@ -39,18 +43,21 @@ class JobStore:
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         record = table.get_item(Key={"PK": f"#{author}", "SK": f"#{job_id}"})
+        item = record.get("Item")
+        if not item:
+            raise ValueError(f"Job {job_id} not found for author {author}")
         return Job(
-            id=UUID(record["Item"]["id"]),
-            title=record["Item"]["title"],
-            company=record["Item"]["company"],
-            location=record["Item"]["location"],
-            job_url=record["Item"]["job_url"],
-            description=record["Item"]["description"],
-            logo_url=record["Item"]["logo_url"],
-            status=JobStatus[record["Item"]["status"]],
-            author=record["Item"]["author"],
-            created_at=record["Item"]["created_at"],
-            updated_at=record["Item"]["updated_at"],
+            id=UUID(item["id"]),
+            title=item["title"],
+            company=item["company"],
+            location=item["location"],
+            job_url=item["job_url"],
+            description=item["description"],
+            logo_url=item["logo_url"],
+            status=JobStatus[item["status"]],
+            author=item["author"],
+            created_at=item["created_at"],
+            updated_at=item["updated_at"],
         )
 
     def get_active(self, author):

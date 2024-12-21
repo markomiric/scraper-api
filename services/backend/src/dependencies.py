@@ -42,6 +42,9 @@ async def get_jwks():
         response = await _httpx_client.get(jwks_url)
         _jwks_cache = response.json()
 
+    if not _jwks_cache.get("keys"):
+        raise HTTPException(status_code=401, detail="No JWKS keys found")
+
     return _jwks_cache
 
 
@@ -106,6 +109,11 @@ async def get_current_user(
 
 
 def has_roles(required_roles: list):
+    """
+    Dependency that checks if user roles intersect the required roles.
+    Raises HTTP 403 if not authorized.
+    """
+
     def role_checker(current_user=Depends(get_current_user)):
         groups = current_user.get("roles", [])
         if not any(role in groups for role in required_roles):

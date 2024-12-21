@@ -19,6 +19,9 @@ def create_job(
     job_store: JobStore = Depends(get_job_store),
     current_user=Depends(get_current_user),
 ):
+    """
+    Create a new job listing in DynamoDB.
+    """
     job = Job.create(
         id_=uuid.uuid4(),
         title=job_request.title,
@@ -38,6 +41,9 @@ def create_job(
 def get_jobs(
     job_store: JobStore = Depends(get_job_store), current_user=Depends(get_current_user)
 ):
+    """
+    Retrieve all jobs for the current user.
+    """
     jobs = job_store.get_all(current_user["email"])
     return jobs
 
@@ -59,6 +65,9 @@ def update_job(
     job_store: JobStore = Depends(get_job_store),
     current_user=Depends(get_current_user),
 ):
+    """
+    Update an existing job with new field values.
+    """
     job = job_store.get(job_id, current_user["email"])
     update_data = job_request.model_dump(exclude_unset=True)
     for field, value in update_data.items():

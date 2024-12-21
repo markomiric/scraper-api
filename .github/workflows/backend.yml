@@ -40,7 +40,7 @@ jobs:
         run: poetry install --no-root
 
       - name: Run tests
-        run: poetry run pytest tests/ --cov=./ --cov-report=xml
+        run: poetry run pytest tests/ --cov=./ --cov-report=xml --disable-warnings
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
