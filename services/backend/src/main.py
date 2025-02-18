@@ -7,6 +7,7 @@ from mangum import Mangum
 from src.auth.routes import router as auth_router
 from src.health.routes import router as health_router
 from src.job.routes import router as job_router
+from src.linkedin.routes import router as linkedin_scraper_router
 from src.user.routes import router as user_router
 
 environment = os.environ.get("STAGE", "")
@@ -23,6 +24,7 @@ def create_application() -> FastAPI:
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(user_router, prefix="/api/v1")
     application.include_router(job_router, prefix="/api/v1")
+    application.include_router(linkedin_scraper_router, prefix="/api/v1")
     application.include_router(health_router, prefix="/api/v1")
     application.add_middleware(
         CORSMiddleware,

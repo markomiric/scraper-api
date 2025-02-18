@@ -1,4 +1,5 @@
-import datetime
+# python
+import logging
 from uuid import UUID
 
 import boto3
@@ -6,47 +7,69 @@ from boto3.dynamodb.conditions import Key
 
 from src.job.model import Job, JobStatus
 
+logger = logging.getLogger("job.store")
+logger.setLevel(logging.INFO)
+
 
 class JobStore:
     """
     DynamoDB-based implementation for storing and retrieving Job entities.
     """
 
-    def __init__(self, table_name, dynamodb_url=None):
+    def __init__(self, table_name: str, dynamodb_url: str = None):
         self.table_name = table_name
         self.dynamodb_url = dynamodb_url
+        logger.info("Initialized JobStore with table: %s", table_name)
 
     def add(self, job: Job) -> None:
-        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
-        table = dynamodb.Table(self.table_name)
-        table.put_item(
-            Item={
-                "PK": f"#{job.author}",
-                "SK": f"#{job.id}",
-                "GS1PK": f"#{job.author}#{job.status.value}",
-                "GS1SK": f"#{datetime.datetime.now(datetime.UTC).isoformat()}",
-                "id": str(job.id),
-                "title": job.title,
-                "company": job.company,
-                "location": job.location,
-                "job_url": job.job_url,
-                "description": job.description,
-                "logo_url": job.logo_url,
-                "status": job.status.value,
-                "author": job.author,
-                "created_at": job.created_at,
-                "updated_at": job.updated_at,
-            }
-        )
+        logger.info("Adding job with id: %s for author: %s", job.id, job.author)
+        try:
+            dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
+            table = dynamodb.Table(self.table_name)
+            result = table.put_item(
+                Item={
+                    "PK": f"#{job.author}",
+                    "SK": f"#{job.id}",
+                    "id": str(job.id),
+                    "title": job.title,
+                    "company": job.company,
+                    "location": job.location,
+                    "job_url": job.job_url,
+                    "description": job.description,
+                    "logo_url": job.logo_url,
+                    "status": job.status.value,
+                    "author": job.author,
+                    "created_at": job.created_at,
+                    "updated_at": job.updated_at,
+                }
+            )
+            http_status = result.get("ResponseMetadata", {}).get("HTTPStatusCode")
+            if http_status == 200:
+                logger.debug(
+                    "Job %s added successfully with HTTPStatusCode: %s",
+                    job.id,
+                    http_status,
+                )
+            else:
+                logger.warning(
+                    "Job %s put_item returned HTTPStatusCode: %s", job.id, http_status
+                )
+        except Exception as e:
+            logger.exception(
+                "Error adding job %s for author %s: %s", job.id, job.author, e
+            )
+            raise
 
     def get(self, job_id: str, author: str) -> Job:
+        logger.info("Retrieving job with id: %s for author: %s", job_id, author)
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         record = table.get_item(Key={"PK": f"#{author}", "SK": f"#{job_id}"})
         item = record.get("Item")
         if not item:
+            logger.error("Job %s not found for author %s", job_id, author)
             raise ValueError(f"Job {job_id} not found for author {author}")
-        return Job(
+        job = Job(
             id=UUID(item["id"]),
             title=item["title"],
             company=item["company"],
@@ -59,14 +82,21 @@ class JobStore:
             created_at=item["created_at"],
             updated_at=item["updated_at"],
         )
+        logger.debug("Job retrieved successfully: %s", job_id)
+        return job
 
-    def get_active(self, author):
+    def get_active(self, author: str):
+        logger.info("Retrieving active jobs for author: %s", author)
         return self._get_by_status(author, JobStatus.ACTIVE)
 
-    def get_closed(self, author):
+    def get_closed(self, author: str):
+        logger.info("Retrieving closed jobs for author: %s", author)
         return self._get_by_status(author, JobStatus.CLOSED)
 
-    def _get_by_status(self, author, status):
+    def _get_by_status(self, author: str, status: JobStatus):
+        logger.info(
+            "Retrieving jobs for author: %s with status: %s", author, status.value
+        )
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         last_key = None
@@ -100,10 +130,16 @@ class JobStore:
             last_key = response.get("LastEvaluatedKey")
             if last_key is None:
                 break
-
+        logger.debug(
+            "Retrieved %d jobs for author %s with status %s",
+            len(jobs),
+            author,
+            status.value,
+        )
         return jobs
 
     def get_all(self, author: str):
+        logger.info("Retrieving all jobs for author: %s", author)
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         response = table.query(KeyConditionExpression=Key("PK").eq(f"#{author}"))
@@ -123,9 +159,11 @@ class JobStore:
             )
             for item in response["Items"]
         ]
+        logger.debug("Retrieved %d total jobs for author %s", len(jobs), author)
         return jobs
 
     def update(self, job: Job) -> None:
+        logger.info("Updating job with id: %s for author: %s", job.id, job.author)
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         table.update_item(
@@ -164,8 +202,10 @@ class JobStore:
                 ":updated_at": job.updated_at,
             },
         )
+        logger.debug("Job updated successfully: %s", job.id)
 
     def delete(self, job_id: str, author: str) -> None:
+        logger.info("Deleting job with id: %s for author: %s", job_id, author)
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)
         table.delete_item(
@@ -174,3 +214,4 @@ class JobStore:
                 "SK": f"#{job_id}",
             }
         )
+        logger.debug("Job deleted successfully: %s", job_id)

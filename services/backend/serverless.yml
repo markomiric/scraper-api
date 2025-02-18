@@ -102,6 +102,10 @@ functions:
                 - Arn
             scopes:
               - aws.cognito.signin.user.admin
+    scraper:
+      handler: src/linkedin/scraper.handler
+      events:
+        - schedule: "rate(1 hour)"
   # cron:
   #   handler: src.scraper.run
   #   events:
@@ -110,23 +114,11 @@ functions:
 
 custom:
   pythonRequirements:
-    # dockerImage: public.ecr.aws/sam/build-python3.13:latest
     slim: false
     usePoetry: true
-    # fileName: requirements.txt
     noDeploy:
       - boto3
       - botocore
-    # pipCmdExtraArgs:
-    #   - --platform
-    #   - manylinux2014_x86_64
-    #   - --implementation
-    #   - cp
-    #   - --python-version
-    #   - "3.13"
-    #   - "--only-binary=:all:"
-    #   - --upgrade
-    #   - pydantic
   stage: ${opt:stage, self:provider.stage}
   tableName: ${self:custom.stage}-jobs-table
 

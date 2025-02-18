@@ -1,6 +1,6 @@
 service: backend
 
-frameworkVersion: '3'
+frameworkVersion: "3"
 useDotenv: true
 
 provider:
@@ -20,6 +20,25 @@ provider:
     AWS_USER_POOL_CLIENT_ID:
       Ref: CognitoUserPoolClient
     STAGE: ${self:provider.stage}
+
+    # DynamoDB Configuration
+    DYNAMODB_URL: ${env:DYNAMODB_URL}
+
+    # OpenAI Configuration
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+
+    # Proxy Configuration
+    PROXY_USERNAME: ${env:PROXY_USERNAME}
+    PROXY_PASSWORD: ${env:PROXY_PASSWORD}
+    PROXIES: ${env:PROXIES}
+
+    # Scraping Configuration
+    TIMESPAN: ${env:TIMESPAN}
+    PAGES_TO_SCRAPE: ${env:PAGES_TO_SCRAPE}
+    ROUNDS: ${env:ROUNDS}
+    DAYS_TO_SCRAPE: ${env:DAYS_TO_SCRAPE}
+    REQUEST_DELAY: ${env:REQUEST_DELAY}
+    TIMEOUT: ${env:TIMEOUT}
   iam:
     role:
       statements:
@@ -33,8 +52,9 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
           Resource:
-            - "Fn::GetAtt": [ JobsAPITable, Arn ]
-            - "Fn::Join": ['/', ["Fn::GetAtt": [ JobsAPITable, Arn ], 'index', '*']]
+            - "Fn::GetAtt": [JobsAPITable, Arn]
+            - "Fn::Join":
+                ["/", ["Fn::GetAtt": [JobsAPITable, Arn], "index", "*"]]
         - Effect: Allow
           Action:
             - cognito-idp:AdminGetUser
@@ -45,9 +65,8 @@ provider:
             - cognito-idp:AdminAddUserToGroup
           Resource:
             - !Sub
-                - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}
-                - UserPoolId: !Ref CognitoUserPool
-
+              - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}
+              - UserPoolId: !Ref CognitoUserPool
 
 functions:
   API:
@@ -62,7 +81,7 @@ functions:
           cors:
             origin: ${env:ALLOWED_ORIGINS}
             maxAge: 60
-      
+
       - http:
           path: /api/v1/health
           method: get
@@ -90,7 +109,8 @@ functions:
           method: any
           cors:
             origin: ${env:ALLOWED_ORIGINS}
-            headers: "*"
+            headers:
+              "*"
               # - Authorization
             maxAge: 60
           authorizer:
@@ -102,11 +122,10 @@ functions:
                 - Arn
             scopes:
               - aws.cognito.signin.user.admin
-  # cron:
-  #   handler: src.scraper.run
+  # scraper:
+  #   handler: src.linkedin.scraper.handler
   #   events:
-  #       - schedule: cron(10 03 * * ? *) #run at 03:10 (UTC) every day.
-
+  #     - schedule: "rate(1 hour)"
 
 custom:
   pythonRequirements:
@@ -134,5 +153,12 @@ plugins:
   - serverless-python-requirements
 
 resources:
-  - ${file(resources/cognito.yml)} 
+  - ${file(resources/cognito.yml)}
   - ${file(resources/dynamodb.yml)}
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "!venv/**"
+    - "!apienv/**"
+    - "!__pycache__/**"
