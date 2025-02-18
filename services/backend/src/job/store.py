@@ -138,7 +138,40 @@ class JobStore:
         )
         return jobs
 
-    def get_all(self, author: str):
+    def get_all(self, limit: int, last_key: dict = None):
+        """
+        Retrieve up to a limited number of jobs from the table using pagination.
+        Use last_key to continue from a previous scan, if provided.
+        """
+        logger.info("Retrieving up to %d jobs", limit)
+        dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
+        table = dynamodb.Table(self.table_name)
+        scan_kwargs = {"Limit": limit}
+        if last_key is not None:
+            scan_kwargs["ExclusiveStartKey"] = last_key
+
+        response = table.scan(**scan_kwargs)
+        jobs = [
+            Job(
+                id=UUID(item["id"]),
+                title=item["title"],
+                company=item["company"],
+                location=item["location"],
+                job_url=item["job_url"],
+                description=item["description"],
+                logo_url=item.get("logo_url"),
+                status=JobStatus[item["status"]],
+                author=item["author"],
+                created_at=item["created_at"],
+                updated_at=item["updated_at"],
+            )
+            for item in response.get("Items", [])
+        ]
+        new_last_key = response.get("LastEvaluatedKey")
+        logger.debug("Retrieved %d jobs; new_last_key: %s", len(jobs), new_last_key)
+        return jobs, new_last_key
+
+    def get_all_by_author(self, author: str):
         logger.info("Retrieving all jobs for author: %s", author)
         dynamodb = boto3.resource("dynamodb", endpoint_url=self.dynamodb_url)
         table = dynamodb.Table(self.table_name)

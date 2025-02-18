@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from src.common.schema import BaseSchema
 from src.job.model import JobStatus
@@ -46,3 +46,8 @@ class JobResponse(BaseSchema):
     author: str = Field(..., description="Email of job poster")
     created_at: str = Field(..., description="ISO formatted creation timestamp")
     updated_at: str = Field(..., description="ISO formatted update timestamp")
+
+
+class PaginatedJobsResponse(BaseModel):
+    jobs: List[JobResponse]
+    last_key: Optional[str] = None
